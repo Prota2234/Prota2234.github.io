@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>極光選號 | 現代美型隨機數字抽籤器</title>
+  <meta name="description" content="極致美感、流暢動畫與自訂範圍的質感隨機數字抽籤網站，支援單抽、多抽、不重複與音效反饋。">
+  <!-- Google Fonts: Outfit & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700;800&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- 背景流光光暈裝飾 -->
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+  <div class="ambient-glow glow-3"></div>
+
+  <!-- 彩帶 / 粒子慶祝畫布 -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <!-- 主要應用容器 -->
+  <div class="app-wrapper">
+    <!-- 頂部導航 / 標題列 -->
+    <header class="app-header">
+      <div class="logo-group">
+        <div class="logo-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+            <circle cx="15.5" cy="8.5" r="1.5"></circle>
+            <circle cx="8.5" cy="15.5" r="1.5"></circle>
+            <circle cx="15.5" cy="15.5" r="1.5"></circle>
+            <circle cx="12" cy="12" r="1.5"></circle>
+          </svg>
+        </div>
+        <div class="logo-text">
+          <h1>RANDOMIZER</h1>
+          <span class="subtitle">極光隨機數字抽籤器</span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <!-- 音效切換按鈕 -->
+        <button id="sound-toggle-btn" class="icon-button" title="開啟/關閉音效 (M)" aria-label="切換音效">
+          <svg id="sound-icon-on" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+          </svg>
+          <svg id="sound-icon-off" class="hidden" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="1" y1="1" x2="23" y2="23"></line>
+            <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"></path>
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <line x1="23" y1="9" x2="17" y2="15"></line>
+            <line x1="17" y1="9" x2="23" y2="15"></line>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- 主區塊：巨型號碼展示展台 -->
+    <main class="main-content">
+      <section class="display-stage">
+        <div class="result-card-container">
+          <div class="result-halo"></div>
+          <div class="result-card" id="result-card">
+            <div class="card-status-badge" id="card-status-badge">
+              <span class="status-dot"></span>
+              <span id="status-text">點擊抽籤或按空白鍵</span>
+            </div>
+
+            <!-- 單個主號碼顯示 -->
+            <div class="number-display" id="single-number-display">
+              <span class="number-digit" id="primary-number">?</span>
+            </div>
+
+            <!-- 多號碼展示容器 -->
+            <div class="multi-numbers-grid hidden" id="multi-numbers-grid"></div>
+
+            <!-- 操作輔助列 -->
+            <div class="card-footer-info">
+              <span class="range-indicator" id="current-range-indicator">範圍: 1 ~ 100</span>
+              <button id="quick-copy-btn" class="ghost-copy-btn" title="複製目前結果" aria-label="複製結果">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                <span>複製結果</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 巨型抽籤按鈕 -->
+        <div class="action-dock">
+          <button id="draw-button" class="btn-draw" aria-label="立即隨機抽取">
+            <div class="btn-shine"></div>
+            <div class="btn-content">
+              <svg class="sparkle-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/>
+              </svg>
+              <span class="btn-title">立即抽籤</span>
+              <span class="btn-keyhint">SPACE</span>
+            </div>
+          </button>
+        </div>
+      </section>
+
+      <!-- 控制設定面板 (卡片式) -->
+      <section class="control-panel glass-card">
+        <!-- 快捷預設 -->
+        <div class="control-section presets-section">
+          <div class="section-label">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+            <span>常用快速範圍</span>
+          </div>
+          <div class="preset-chips">
+            <button class="preset-chip active" data-min="1" data-max="100">1 ~ 100</button>
+            <button class="preset-chip" data-min="1" data-max="10">1 ~ 10</button>
+            <button class="preset-chip" data-min="1" data-max="50">1 ~ 50</button>
+            <button class="preset-chip" data-min="1" data-max="1000">1 ~ 1000</button>
+            <button class="preset-chip" data-min="1" data-max="6" data-type="dice">🎲 1 ~ 6 (骰子)</button>
+            <button class="preset-chip" data-min="1" data-max="49" data-count="6" data-unique="true">🎱 樂透 (1~49 抽 6)</button>
+          </div>
+        </div>
+
+        <!-- 範圍數值輸入 -->
+        <div class="control-section range-inputs-section">
+          <div class="section-label">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+            <span>自訂數值範圍</span>
+          </div>
+
+          <div class="inputs-grid">
+            <!-- 最小值 -->
+            <div class="input-card">
+              <label for="min-val-input" class="input-sublabel">最小值 (MIN)</label>
+              <div class="stepper-box">
+                <button type="button" class="step-btn" id="min-step-dec" aria-label="減少最小值">-</button>
+                <input type="number" id="min-val-input" value="1" step="1" inputmode="numeric">
+                <button type="button" class="step-btn" id="min-step-inc" aria-label="增加最小值">+</button>
+              </div>
+            </div>
+
+            <!-- 分隔箭頭 -->
+            <div class="range-divider">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </div>
+
+            <!-- 最大值 -->
+            <div class="input-card">
+              <label for="max-val-input" class="input-sublabel">最大值 (MAX)</label>
+              <div class="stepper-box">
+                <button type="button" class="step-btn" id="max-step-dec" aria-label="減少最大值">-</button>
+                <input type="number" id="max-val-input" value="100" step="1" inputmode="numeric">
+                <button type="button" class="step-btn" id="max-step-inc" aria-label="增加最大值">+</button>
+              </div>
+            </div>
+          </div>
+          <div id="range-error-tip" class="error-tip hidden">⚠️ 最小值不可大於或等於最大值</div>
+        </div>
+
+        <!-- 進階抽籤設定 -->
+        <div class="control-section options-section">
+          <div class="options-row">
+            <!-- 抽取數量 -->
+            <div class="option-item">
+              <label for="draw-count-input" class="option-label">一次抽取數量</label>
+              <div class="stepper-box mini">
+                <button type="button" class="step-btn mini" id="count-step-dec">-</button>
+                <input type="number" id="draw-count-input" value="1" min="1" max="50" step="1">
+                <button type="button" class="step-btn mini" id="count-step-inc">+</button>
+              </div>
+            </div>
+
+            <!-- 不重複開關 -->
+            <div class="option-item toggle-item">
+              <span class="option-label">數字不重複</span>
+              <label class="switch-toggle" for="unique-toggle">
+                <input type="checkbox" id="unique-toggle">
+                <span class="slider-round"></span>
+              </label>
+            </div>
+
+            <!-- 滾動速度選擇 -->
+            <div class="option-item speed-item">
+              <label for="speed-select" class="option-label">動畫節奏</label>
+              <select id="speed-select" class="custom-select">
+                <option value="normal" selected>絢麗滾動 (0.9s)</option>
+                <option value="fast">極速俐落 (0.4s)</option>
+                <option value="instant">瞬間出結果</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 統計數據條 -->
+      <section class="stats-bar glass-card">
+        <div class="stat-cell">
+          <span class="stat-label">累計抽籤</span>
+          <span class="stat-value" id="stat-total-rolls">0 <small>次</small></span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-cell">
+          <span class="stat-label">最近抽中</span>
+          <span class="stat-value" id="stat-last-number">-</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-cell">
+          <span class="stat-label">歷史均值</span>
+          <span class="stat-value" id="stat-history-avg">-</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-cell">
+          <span class="stat-label">最常出現</span>
+          <span class="stat-value" id="stat-frequent-num">-</span>
+        </div>
+      </section>
+
+      <!-- 歷史紀錄面板 -->
+      <section class="history-panel glass-card">
+        <div class="panel-header">
+          <div class="panel-title-group">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <h2>抽取歷史紀錄</h2>
+            <span class="history-count-badge" id="history-count">0</span>
+          </div>
+          <div class="panel-header-actions">
+            <button id="copy-history-btn" class="btn-text-action" title="複製所有歷史號碼">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+              複製紀錄
+            </button>
+            <button id="clear-history-btn" class="btn-text-action danger" title="清除所有紀錄">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+              清空
+            </button>
+          </div>
+        </div>
+
+        <div class="history-list-wrapper">
+          <div class="history-empty" id="history-empty">
+            <div class="empty-icon">🎲</div>
+            <p>尚未有抽籤紀錄，點擊上方按鈕開始抽出你的幸運號碼！</p>
+          </div>
+          <div class="history-tags-grid hidden" id="history-tags-grid">
+            <!-- 動態插入歷史卡片 -->
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- 底部版權 & 提示 -->
+    <footer class="app-footer">
+      <p>現代極簡隨機選號器 • 支援鍵盤 <kbd>Space</kbd> 或 <kbd>Enter</kbd> 快速抽籤 • <kbd>M</kbd> 鍵切換音效</p>
+    </footer>
+  </div>
+
+  <!-- 浮動提示 Toast -->
+  <div id="toast-message" class="toast-popup hidden">
+    <span class="toast-icon">✓</span>
+    <span class="toast-text" id="toast-text">已複製到剪貼簿</span>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
